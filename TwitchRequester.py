@@ -2,7 +2,6 @@ from twitchAPI.twitch import Twitch, AuthScope
 from datetime import datetime
 import threading
 from enum import Enum
-import pprint
 
 class Requests(Enum):
     LAST_FOLLOWER = 1
@@ -12,7 +11,13 @@ class Requests(Enum):
 class TwitchRequester:
 
     def __init__(self, userName: str) -> None:
-        self.twitch = Twitch('o000ugumika3n9eakreixdlsuaui2f', '6qqe7r60nhieu60sac2oufjpf5vuu2', target_app_auth_scope=[AuthScope.USER_READ_FOLLOWS])
+        file = open("TwitchClientId.txt", 'r')
+        client_id = file.read()
+        file.close()
+        file = open("TwitchClientSecret.txt", 'r')
+        client_secret = file.read()
+        file.close()
+        self.twitch = Twitch(client_id, client_secret, target_app_auth_scope=[AuthScope.USER_READ_FOLLOWS])
         self.id = self.twitch.get_users(logins=[userName])['data'][0]['id']
         # number of seconds between requests
         self.requestTimeouts = dict()
