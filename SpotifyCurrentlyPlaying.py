@@ -12,6 +12,7 @@ class SpotifyCurrentlyPlaying(OBSModule):
     SONG_FILE_NAME = "Song.txt"
     ARTWORK_FILE_NAME = "Artwork.jpg"
     ARTISTS_FILE_NAME = "Artists.txt"
+    COMBINED_FILE_NAME = "CombinedSong.txt"
 
     def __init__(self, directoryPath: str) -> None:
         # file name and seconds between updates unset
@@ -40,11 +41,12 @@ class SpotifyCurrentlyPlaying(OBSModule):
         self.songFile = directoryPath + os.path.sep + self.SONG_FILE_NAME
         self.artworkFile = directoryPath + os.path.sep + self.ARTWORK_FILE_NAME
         self.artistsFile = directoryPath + os.path.sep + self.ARTISTS_FILE_NAME
+        self.combinedFile = directoryPath + os.path.sep + self.COMBINED_FILE_NAME
 
         self.sleepTime = 30.0
 
     def writeToFile(self, fileName: str, stringToWrite: str) -> None:
-        file = open(fileName, 'w')
+        file = open(fileName, 'w', encoding="utf8")
         file.write(stringToWrite)
         file.close()
 
@@ -55,6 +57,7 @@ class SpotifyCurrentlyPlaying(OBSModule):
         album = ""
         artists = ""
         artwork = ""
+        combinedSong = "No Song playing right now"
 
         if results["is_playing"]:
             item = results["item"]
@@ -77,15 +80,18 @@ class SpotifyCurrentlyPlaying(OBSModule):
             # get song name
             song = item["name"]
 
+            # combined
+            combinedSong = "Song: " + song + "   " + "Album: " + album + "   " + "Artists: " + artists + "   "
+
             # sleep time computed from duration and progress
             # (this is not 100% accurate but good enough)
             self.sleepTime = (item["duration_ms"] - results["progress_ms"]) / 1000.0
-
         
         # now write them all to files
         self.writeToFile(self.songFile, song)
         self.writeToFile(self.albumFile, album)
         self.writeToFile(self.artistsFile, artists)
+        self.writeToFile(self.combinedFile, combinedSong)
         urllib.request.urlretrieve(artwork, self.artworkFile)
 
 
