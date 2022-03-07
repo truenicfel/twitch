@@ -2,6 +2,7 @@ from OBSModule import OBSModule
 import time
 import os
 import urllib.request
+import shutil
 
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
@@ -43,6 +44,8 @@ class SpotifyCurrentlyPlaying(OBSModule):
         self.artistsFile = directoryPath + os.path.sep + self.ARTISTS_FILE_NAME
         self.combinedFile = directoryPath + os.path.sep + self.COMBINED_FILE_NAME
 
+        self.directoryPath = directoryPath
+
         self.sleepTime = 30.0
 
     def writeToFile(self, fileName: str, stringToWrite: str) -> None:
@@ -53,13 +56,13 @@ class SpotifyCurrentlyPlaying(OBSModule):
     def update(self) -> None:
         results = self.spotify.currently_playing()
 
-        song = "Dead silence..."
+        song = "No song playing right now"
         album = ""
         artists = ""
         artwork = ""
-        combinedSong = "No Song playing right now"
+        combinedSong = "No song playing right now"
 
-        if results["is_playing"]:
+        if results and results["is_playing"]:
             item = results["item"]
 
             # get artist names and stuff them in one string
@@ -86,13 +89,17 @@ class SpotifyCurrentlyPlaying(OBSModule):
             # sleep time computed from duration and progress
             # (this is not 100% accurate but good enough)
             self.sleepTime = (item["duration_ms"] - results["progress_ms"]) / 1000.0
+
+            urllib.request.urlretrieve(artwork, self.artworkFile)
+        else:
+            shutil.copyfile(self.directoryPath + os.path.sep + "defaultArtwork.jpg", self.artworkFile)
         
         # now write them all to files
         self.writeToFile(self.songFile, song)
         self.writeToFile(self.albumFile, album)
         self.writeToFile(self.artistsFile, artists)
         self.writeToFile(self.combinedFile, combinedSong)
-        urllib.request.urlretrieve(artwork, self.artworkFile)
+        
 
 
     """Special behaviour of thread function because we have multiple strings."""
