@@ -27,8 +27,6 @@ class SpotifyCurrentlyPlaying(OBSModule):
         file = open("SpotifyClientSecret.txt", 'r')
         client_secret = file.read()
         file.close()
-        print(client_id)
-        print(client_secret)
 
         self.spotify = spotipy.Spotify(
             auth_manager=SpotifyOAuth(
