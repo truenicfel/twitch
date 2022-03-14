@@ -18,8 +18,9 @@ spotify.runThread()
 
 input("Press Enter to stop!")
 
-lastFollower.stopThread()
-stats.stopThread()
+# lastFollower.stopThread()
+# stats.stopThread()
+
 spotify.stopThread()
 
 print("Stopping... This might take a few seconds...")

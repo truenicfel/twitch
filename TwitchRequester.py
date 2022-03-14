@@ -75,27 +75,47 @@ class TwitchRequester:
             raise ValueError("Unknown request type: " + entry)
 
     def __requestReadFollows(self) -> None:
-        # perform request
-        followsResponse = self.twitch.get_users_follows(first=1, to_id=self.id)
-        lastFollowerName = followsResponse['data'][0]['from_name']
-        numberOfFollowers = followsResponse['total']
-        # cache results
-        self.cache[Requests.LAST_FOLLOWER] = lastFollowerName
-        self.cache[Requests.NUMBER_OF_FOLLOWERS] = numberOfFollowers
+        followsResponse = None
+        for attempts in range(5):
+            try:
+                # perform request
+                followsResponse = self.twitch.get_users_follows(first=1, to_id=self.id)
+                break
+            except:
+                if attempts == 4:
+                    print("Couldnt read followers from twitch api. Retrying later...")
+        if not followsResponse == None:
+            lastFollowerName = followsResponse['data'][0]['from_name']
+            numberOfFollowers = followsResponse['total']
+            # cache results
+            self.cache[Requests.LAST_FOLLOWER] = lastFollowerName
+            self.cache[Requests.NUMBER_OF_FOLLOWERS] = numberOfFollowers
         # save timestamp
         now = datetime.now()
         self.requestTimestamps[Requests.LAST_FOLLOWER] = now
         self.requestTimestamps[Requests.NUMBER_OF_FOLLOWERS] = now
 
+
     def __requestStream(self) -> None:
-        response = self.twitch.get_streams(user_id=self.id)
-        data = response['data']
-        viewerCount = "0"
-        if (data):
-            # stream is online
-            viewerCount = data[0]['viewer_count']
-        # cache results
-        self.cache[Requests.NUMBER_OF_VIEWERS] = viewerCount
+
+        streamResponse = None
+        for attempts in range(5):
+            try:
+                # perform request
+                streamResponse = self.twitch.get_streams(user_id=self.id)
+                break
+            except:
+                if attempts == 4:
+                    print("Couldnt read stream from twitch api. Retrying later...")
+
+        if not streamResponse == None:
+            data = streamResponse['data']
+            viewerCount = "0"
+            if (data):
+                # stream is online
+                viewerCount = data[0]['viewer_count']
+            # cache results
+            self.cache[Requests.NUMBER_OF_VIEWERS] = viewerCount
         # save timestamp
         now = datetime.now()
         self.requestTimestamps[Requests.NUMBER_OF_VIEWERS] = now

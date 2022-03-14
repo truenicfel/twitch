@@ -54,7 +54,16 @@ class SpotifyCurrentlyPlaying(OBSModule):
         file.close()
 
     def update(self) -> None:
-        results = self.spotify.currently_playing()
+        results = None
+        for attempts in range(5):
+            try:
+                # perform request
+                results = self.spotify.currently_playing()
+                break
+            except:
+                if attempts == 4:
+                    print("Couldnt read currently playing from spotify api. Retrying later...")
+        
 
         song = "No song playing right now"
         album = ""
@@ -73,7 +82,7 @@ class SpotifyCurrentlyPlaying(OBSModule):
                     artists += artistsRaw[index]["name"]
                 else:
                     artists += artistsRaw[index]["name"]
-                    aritsts += ", "
+                    artists += ", "
 
             # get album name and image
             albumRaw = item["album"]
@@ -90,9 +99,13 @@ class SpotifyCurrentlyPlaying(OBSModule):
             # (this is not 100% accurate but good enough)
             self.sleepTime = (item["duration_ms"] - results["progress_ms"]) / 1000.0
 
-            urllib.request.urlretrieve(artwork, self.artworkFile)
+            try:
+                urllib.request.urlretrieve(artwork, self.artworkFile)
+            except:
+                shutil.copyfile(self.directoryPath + os.path.sep, + "defaultArtwork.jpg", self.artworkFile)
         else:
             shutil.copyfile(self.directoryPath + os.path.sep + "defaultArtwork.jpg", self.artworkFile)
+            self.sleepTime = 30.0
         
         # now write them all to files
         self.writeToFile(self.songFile, song)
